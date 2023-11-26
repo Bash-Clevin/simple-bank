@@ -2,12 +2,10 @@ package api
 
 import (
 	db "github.com/Bash-clevin/simplebank-go/db/sqlc"
-	"github.com/Bash-clevin/simplebank-go/util"
 	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
-	config util.Config
 	store  db.Store
 	router *gin.Engine
 }
