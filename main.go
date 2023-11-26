@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"log"
 
+	"github.com/Bash-clevin/simplebank-go/api"
+	db "github.com/Bash-clevin/simplebank-go/db/sqlc"
 	"github.com/Bash-clevin/simplebank-go/util"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
@@ -15,7 +19,23 @@ func main() {
 		log.Fatal("cannot load config:", err)
 	}
 
+	connPool, err := pgxpool.New(context.Background(), config.DBSource)
+	if err != nil {
+		log.Fatal("cannot connect to db:", err)
+	}
+
 	runDBMigration(config.MigrationUrl, config.DBSource)
+
+	store := db.NewStore(connPool)
+
+	server := api.NewServer(*store)
+
+	err = server.Start(config.ServerAddress)
+
+	if err != nil {
+		log.Fatal("cannot start server")
+	}
+
 }
 
 func runDBMigration(migrationURL string, dbSource string) {
