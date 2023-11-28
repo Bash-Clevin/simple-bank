@@ -40,19 +40,19 @@ func TestGetAccountAPI(t *testing.T) {
 				requireBodyMatchAccount(t, recorder.Body, account)
 			},
 		},
-		// {
-		// 	name:      "NotFound",
-		// 	accountID: account.ID,
-		// 	buildStubs: func(store *mockdb.MockStore) {
-		// 		store.EXPECT().
-		// 			GetAccount(gomock.Any(), gomock.Eq(account.ID)).
-		// 			Times(1).
-		// 			Return(db.Account{}, sql.ErrNoRows) // Error message has to be modified
-		// 	},
-		// 	checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-		// 		require.Equal(t, http.StatusNotFound, recorder.Code)
-		// 	},
-		// },
+		{
+			name:      "NotFound",
+			accountID: account.ID,
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
+					Times(1).
+					Return(db.Account{}, db.ErrRecordNotFound) // Error message has to be modified
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
 		{
 			name:      "InternalServerError",
 			accountID: account.ID,
