@@ -1,19 +1,35 @@
 package api
 
 import (
+	"fmt"
+
 	db "github.com/Bash-clevin/simplebank-go/db/sqlc"
+	"github.com/Bash-clevin/simplebank-go/token"
+	"github.com/Bash-clevin/simplebank-go/util"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 )
 
 type Server struct {
-	store  db.Store
-	router *gin.Engine
+	config     util.Config
+	store      db.Store
+	tokenMaker token.TokenMaker
+	router     *gin.Engine
 }
 
-func NewServer(store db.Store) *Server {
-	server := &Server{store: store}
+func NewServer(config util.Config, store db.Store) (*Server, error) {
+	// you can implemet jwt or paseto auth token
+	tokenMaker, err := token.NewPasetoTokenMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create token maker: %w", err)
+	}
+
+	server := &Server{
+		config:     config,
+		store:      store,
+		tokenMaker: tokenMaker,
+	}
 	router := gin.Default()
 
 	// Register a new validator to gin
@@ -30,7 +46,7 @@ func NewServer(store db.Store) *Server {
 	router.POST("/transfers", server.createTransfer)
 
 	server.router = router
-	return server
+	return server, nil
 }
 
 func (server *Server) Start(address string) error {
